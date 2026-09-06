@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id             String         @id @default(cuid())
+  name           String
+  email          String         @unique
+  passwordHash   String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  sessions       Session[]
+  journalEntries JournalEntry[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum DayRating {
+  GREAT
+  GOOD
+  AVERAGE
+  BAD
+}
+
+model JournalEntry {
+  id               String    @id @default(cuid())
+  title            String?   @db.VarChar(160)
+  content          String    @db.Text
+  dayRating        DayRating
+  mood             Int
+  entryDate        DateTime  @default(now())
+  weatherCondition String?   @db.VarChar(80)
+  temperature      Float?
+  weatherIcon      String?   @db.VarChar(20)
+  weatherLocation  String?   @db.VarChar(120)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, entryDate])
+}
